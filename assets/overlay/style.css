@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chakra+Petch:wght@400;600&display=swap');
+
+:root {
+  --neon-pink: #ff2fb0;
+  --neon-purple: #a63cff;
+  --neon-cyan: #2fe6ff;
+  --neon-yellow: #ffe23c;
+  --neon-green: #3cffb0;
+  --neon-red: #ff3c3c;
+  --bg-panel: rgba(15, 8, 26, 0.72);
+  --border-glow: rgba(166, 60, 255, 0.55);
+  --text-main: #f4e9ff;
+  --text-dim: #b9a8d6;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: 'Chakra Petch', sans-serif;
+  color: var(--text-main);
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+}
+
+#root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 28px;
+}
+
+.brand {
+  position: absolute;
+  top: 24px; left: 28px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 4px;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.brand-vine {
+  font-size: 26px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan), 0 0 18px var(--neon-cyan);
+}
+
+.brand-chaos {
+  font-size: 42px;
+  color: var(--neon-pink);
+  text-shadow: 0 0 10px var(--neon-pink), 0 0 24px var(--neon-purple);
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  box-shadow: 0 0 24px rgba(166, 60, 255, 0.25), inset 0 0 40px rgba(166, 60, 255, 0.06);
+  backdrop-filter: blur(2px);
+  padding: 16px 18px;
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
+  font-size: 20px;
+  color: var(--neon-yellow);
+  text-shadow: 0 0 10px rgba(255, 226, 60, 0.6);
+}
+
+.catalog {
+  position: absolute;
+  top: 100px; left: 28px;
+  width: 380px;
+  height: 640px;
+  overflow-y: auto;
+}
+
+.catalog-group-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--neon-cyan);
+  margin: 14px 0 6px;
+}
+
+.catalog-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.catalog-item .cmd { color: var(--text-main); font-weight: 600; }
+.catalog-item .cost { color: var(--neon-yellow); font-weight: 600; }
+.catalog-item.disabled { opacity: 0.35; text-decoration: line-through; }
+
+.tier-Nuisance { border-left: 3px solid var(--neon-green); }
+.tier-Disruptive { border-left: 3px solid var(--neon-cyan); }
+.tier-Painful { border-left: 3px solid var(--neon-purple); }
+.tier-Devastating { border-left: 3px solid var(--neon-red); }
+.tier-Blessing { border-left: 3px solid var(--neon-yellow); }
+.tier-Ultimate { border-left: 3px solid #fff; box-shadow: 0 0 12px var(--neon-red); }
+
+.leaderboard {
+  position: absolute;
+  top: 100px; right: 28px;
+  width: 320px;
+}
+
+.leaderboard ol { margin: 0; padding-left: 20px; }
+.leaderboard li { font-size: 15px; margin-bottom: 6px; }
+.leaderboard .balance { color: var(--neon-yellow); float: right; }
+
+.chat {
+  position: absolute;
+  bottom: 28px; right: 28px;
+  width: 420px;
+  height: 260px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+#chat-list { display: flex; flex-direction: column-reverse; gap: 4px; }
+
+.chat-line { font-size: 13px; opacity: 0.9; }
+.chat-line .name { color: var(--neon-cyan); font-weight: 600; margin-right: 6px; }
+.chat-line.sub .name { color: var(--neon-pink); }
+.chat-line.mod .name { color: var(--neon-green); }
+
+#alerts {
+  position: absolute;
+  top: 40px; left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 640px;
+}
+
+.alert {
+  width: 100%;
+  text-align: center;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 1px;
+  background: rgba(15, 8, 26, 0.9);
+  border: 2px solid var(--neon-pink);
+  color: var(--text-main);
+  text-shadow: 0 0 10px var(--neon-pink);
+  box-shadow: 0 0 30px var(--neon-purple);
+  animation: alert-in 0.25s ease-out, alert-out 0.4s ease-in 4.6s forwards;
+}
+
+.alert.refund { border-color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); }
+.alert.clip { border-color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(-30px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes alert-out {
+  to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+}

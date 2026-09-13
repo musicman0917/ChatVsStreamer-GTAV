@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+scripts/ChaosMod/config.ini
+scripts/ChaosMod/tokens.json
+scripts/ChaosMod/chaosmod.sqlite
+scripts/ChaosMod/chaosmod.log
