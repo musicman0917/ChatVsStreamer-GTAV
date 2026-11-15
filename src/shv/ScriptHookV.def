@@ -1,0 +1,13 @@
+LIBRARY ScriptHookV.dll
+EXPORTS
+    ?scriptRegister@@YAXPEAUHINSTANCE__@@P6AXXZ@Z
+    ?scriptUnregister@@YAXPEAUHINSTANCE__@@@Z
+    ?scriptWait@@YAXK@Z
+    ?keyboardHandlerRegister@@YAXP6AXKGEHHHH@Z@Z
+    ?keyboardHandlerUnregister@@YAXP6AXKGEHHHH@Z@Z
+    ?nativeInit@@YAX_K@Z
+    ?nativePush64@@YAX_K@Z
+    ?nativeCall@@YAPEA_KXZ
+    ?worldGetAllVehicles@@YAHPEAHH@Z
+    ?worldGetAllPeds@@YAHPEAHH@Z
+    ?getGameVersion@@YA?AW4eGameVersion@@XZ

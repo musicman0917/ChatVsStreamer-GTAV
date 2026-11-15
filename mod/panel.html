@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control Panel</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #120e1b;
+    --card: #1c1729;
+    --edge: #322a45;
+    --text: #f3eefc;
+    --muted: #a89ebe;
+    --accent: #ff3d8b;
+    --accent2: #26e0d4;
+    --ok: #3ddc97;
+    --bad: #ff5c70;
+    --warn: #ffb627;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--edge); padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 20px 40px; display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--edge); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+  .two { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #5a5070; flex: none; }
+  .dot.on { background: var(--ok); }
+  .dot.bad { background: var(--bad); }
+  #status { font-size: 12px; color: var(--muted); }
+  button { font: inherit; color: var(--text); background: #2b2340; border: 1px solid var(--edge); border-radius: 6px; padding: 5px 11px; cursor: pointer; min-height: 30px; }
+  button:hover { border-color: var(--accent2); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent2); outline-offset: 1px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #17101f; font-weight: 600; }
+  input, select { font: inherit; color: var(--text); background: #120e1b; border: 1px solid var(--edge); border-radius: 6px; padding: 5px 8px; min-height: 30px; }
+  input[type=number] { width: 96px; font-variant-numeric: tabular-nums; }
+  input[type=checkbox] { width: 16px; height: 16px; min-height: 0; accent-color: var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grow { flex: 1 1 180px; min-width: 0; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 600; font-size: 12px; color: var(--muted); padding: 4px 8px; border-bottom: 1px solid var(--edge); white-space: nowrap; }
+  td { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: middle; }
+  td.name { min-width: 200px; }
+  td.name b { display: block; font-weight: 600; }
+  .tag { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 4px; background: #2b2340; color: var(--muted); margin-left: 4px; font-weight: 400; }
+  .setting { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .setting:last-child { border-bottom: 0; }
+  #log { height: 190px; overflow-y: auto; font: 12px/1.5 Consolas, monospace; background: #120e1b; border: 1px solid var(--edge); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ev-fired { color: var(--ok); }
+  .ev-failed { color: var(--bad); }
+  .ev-reply { color: var(--accent2); }
+  #banner { display: none; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--warn); color: var(--warn); }
+  #banner.show { display: block; }
+  a { color: var(--accent2); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Chat <span>vs</span> Streamer</h1>
+  <span class="pill"><i id="dGame" class="dot"></i><span id="tGame">game</span></span>
+  <span class="pill"><i id="dTwitch" class="dot"></i><span id="tTwitch">twitch</span></span>
+  <span id="status"></span>
+  <span class="row" style="margin-left:auto">
+    <button id="pause" class="primary"></button>
+    <button id="chaos" title="Same as the Chaos Gods hotkey">Fire random effect</button>
+    <button id="clear">Clear queue</button>
+  </span>
+</header>
+<main>
+  <div id="banner"></div>
+
+  <div class="two">
+    <section class="card">
+      <h2>Test chat</h2>
+      <p class="muted" style="margin-top:0">Runs a message through the real chat code without Twitch. Replies appear in the log here and never reach your real chat.</p>
+      <form id="simForm" class="row">
+        <input id="simName" value="test_viewer" aria-label="Viewer name" style="width:130px">
+        <select id="simRole" aria-label="Viewer role">
+          <option value="viewer">Viewer</option>
+          <option value="sub">Sub (tier 1)</option>
+          <option value="mod">Mod</option>
+        </select>
+        <input id="simText" class="grow" value="!buy drunk" aria-label="Chat message">
+        <button class="primary">Send</button>
+      </form>
+      <div class="row" style="margin-top:8px">
+        <button type="button" data-say="!balance">!balance</button>
+        <button type="button" data-say="!shop nuisance">!shop nuisance</button>
+        <button type="button" data-mint>Give test_viewer 100,000 points</button>
+        <button type="button" data-raid>Simulate a 30 viewer raid</button>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Log</h2>
+      <div id="log" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">Effects</h2>
+      <div class="row">
+        <input id="filter" type="search" placeholder="Filter" aria-label="Filter effects">
+        <select id="tierFilter" aria-label="Filter by tier">
+          <option value="">All tiers</option>
+          <option>Nuisance</option><option>Disruptive</option><option>Painful</option><option>Devastating</option><option>Blessing</option>
+        </select>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:0">The Fire button skips the price and cooldown, but the game still has to be ready: not in a cutscene, for example.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>On</th><th>Effect</th><th>Tier</th><th>Price</th><th></th></tr></thead>
+        <tbody id="effects"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two" id="settings"></div>
+
+  <p class="muted" id="foot"></p>
+</main>
+<script>
+  const el = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function log(text, cls = "") {
+    const box = el("log");
+    const line = document.createElement("div");
+    if (cls) line.className = cls;
+    line.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
+    box.appendChild(line);
+    while (box.childElementCount > 300) box.firstChild.remove();
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // The header is what proves to the server that this request came from this page.
+  async function post(path, fields) {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: { "X-CVS-Panel": "1", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(fields),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok === false) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+  const act = (path, fields) => post(path, fields).catch(e => log(`Error: ${e.message}`, "ev-failed"));
+
+  // Builds the same IRC line Twitch would send, so the simulator tests the real parser.
+  function sendChat(name, role, text) {
+    const login = name.toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 25) || "test_viewer";
+    const badges = role === "mod" ? "moderator/1" : role === "sub" ? "subscriber/1000" : "";
+    const line = `@badges=${badges};display-name=${name};mod=${role === "mod" ? 1 : 0} :${login}!${login}@${login}.tmi.twitch.tv PRIVMSG #panel :${text}`;
+    log(`${name}: ${text}`);
+    return act("/api/simulate", { line });
+  }
+
+  el("simForm").addEventListener("submit", e => {
+    e.preventDefault();
+    sendChat(el("simName").value.trim() || "test_viewer", el("simRole").value, el("simText").value);
+  });
+  document.querySelectorAll("[data-say]").forEach(b => b.addEventListener("click", () =>
+    sendChat(el("simName").value.trim() || "test_viewer", el("simRole").value, b.dataset.say)));
+  document.querySelector("[data-mint]").addEventListener("click", () => sendChat("test_panel", "mod", "!give test_viewer 100000"));
+  document.querySelector("[data-raid]").addEventListener("click", () => {
+    log("Simulating a raid of 30 viewers");
+    act("/api/simulate", { line: "@display-name=test_raider;login=test_raider;msg-id=raid;msg-param-viewerCount=30 :tmi.twitch.tv USERNOTICE #panel" });
+  });
+
+  let enabled = true;
+  el("pause").addEventListener("click", () => act("/api/control", { action: enabled ? "pause" : "resume" }).then(refresh));
+  el("chaos").addEventListener("click", () => act("/api/control", { action: "chaos" }));
+  el("clear").addEventListener("click", () => act("/api/control", { action: "clear" }).then(refresh));
+
+  async function refresh() {
+    try {
+      const s = await (await fetch("/state")).json();
+      enabled = s.enabled;
+      el("pause").textContent = enabled ? "Pause chat effects" : "Resume chat effects";
+      el("dGame").className = "dot " + (s.ready ? "on" : s.game ? "" : "bad");
+      el("tGame").textContent = s.game ? `game: ${s.gameStatus}` : "game: not running";
+      el("dTwitch").className = "dot " + (s.twitch ? "on" : "bad");
+      el("tTwitch").textContent = s.twitch ? "twitch: connected" : s.twitchConfigured ? "twitch: connecting" : "twitch: not set up";
+      el("status").textContent = [
+        s.enabled ? "" : "PAUSED",
+        s.queued ? `${s.queued} queued` : "",
+        s.active.length ? `running: ${s.active.map(a => `${a.name} ${Math.ceil(a.remaining)}s`).join(", ")}` : "",
+      ].filter(Boolean).join(" · ");
+      el("banner").classList.remove("show");
+    } catch {
+      el("banner").textContent = "Can't reach the mod. Is the game running?";
+      el("banner").classList.add("show");
+    }
+  }
+
+  function drawEffects(effects) {
+    const body = el("effects");
+    body.innerHTML = effects.map(e => {
+      const tags = [e.needsVehicle && "in vehicle", e.needsOnFoot && "on foot", e.risky && "waits for missions", e.silent && "silent"].filter(Boolean)
+        .map(t => `<span class="tag">${t}</span>`).join("");
+      return `<tr data-id="${esc(e.id)}" data-tier="${esc(e.tier)}" data-text="${esc((e.id + " " + e.name + " " + e.description).toLowerCase())}">
+        <td><input type="checkbox" data-toggle ${e.enabled ? "checked" : ""} aria-label="Enable ${esc(e.name)}"></td>
+        <td class="name"><b>${esc(e.name)} <span class="muted">!buy ${esc(e.id)}</span>${tags}</b><span class="muted">${esc(e.description)}</span></td>
+        <td>${esc(e.tier)}</td>
+        <td><input type="number" min="1" max="10000000" value="${e.price}" data-price aria-label="Price of ${esc(e.name)}"></td>
+        <td><button data-fire>Fire</button></td>
+      </tr>`;
+    }).join("");
+    applyFilter();
+  }
+
+  function applyFilter() {
+    const text = el("filter").value.trim().toLowerCase();
+    const tier = el("tierFilter").value;
+    document.querySelectorAll("#effects tr").forEach(tr => {
+      tr.hidden = (tier && tr.dataset.tier !== tier) || (text && !tr.dataset.text.includes(text));
+    });
+  }
+  el("filter").addEventListener("input", applyFilter);
+  el("tierFilter").addEventListener("change", applyFilter);
+
+  el("effects").addEventListener("click", e => {
+    if (e.target.matches("[data-fire]")) {
+      const id = e.target.closest("tr").dataset.id;
+      log(`Firing ${id}`);
+      act("/api/fire", { id });
+    }
+  });
+  el("effects").addEventListener("change", e => {
+    const id = e.target.closest("tr").dataset.id;
+    if (e.target.matches("[data-toggle]")) act("/api/set", { key: `E_${id}`, value: e.target.checked ? 1 : 0 });
+    if (e.target.matches("[data-price]")) act("/api/set", { key: `P_${id}`, value: e.target.value });
+  });
+
+  function drawSettings(settings) {
+    const groups = {};
+    settings.forEach(s => (groups[s.group] ||= []).push(s));
+    el("settings").innerHTML = Object.entries(groups).map(([group, items]) => `<section class="card"><h2>${esc(group)}</h2>` +
+      items.map(s => `<div class="setting">
+        <label for="s_${esc(s.key)}">${esc(s.label)}</label>
+        ${s.isBool
+          ? `<input id="s_${esc(s.key)}" type="checkbox" data-key="${esc(s.key)}" ${s.value ? "checked" : ""}>`
+          : `<input id="s_${esc(s.key)}" type="number" min="${s.min}" max="${s.max}" value="${s.value}" data-key="${esc(s.key)}">`}
+        ${s.help ? `<div class="muted" style="grid-column:1/-1">${esc(s.help)}</div>` : ""}
+      </div>`).join("") + "</section>").join("");
+  }
+  el("settings").addEventListener("change", e => {
+    const key = e.target.dataset.key;
+    if (key) act("/api/set", { key, value: e.target.type === "checkbox" ? (e.target.checked ? 1 : 0) : e.target.value });
+  });
+
+  async function loadSettings() {
+    try {
+      const s = await (await fetch("/api/settings")).json();
+      drawEffects(s.effects);
+      drawSettings(s.settings);
+      el("foot").textContent = `Version ${s.version}. Settings, points and the log are in ${s.dataDir}.`;
+    } catch {
+      setTimeout(loadSettings, 3000);
+    }
+  }
+
+  function connect() {
+    const es = new EventSource("/events");
+    es.onmessage = m => {
+      const ev = JSON.parse(m.data);
+      if (ev.type === "fired") log(`Fired: ${ev.effect}`, "ev-fired");
+      else if (ev.type === "failed") log(`Couldn't run ${ev.effect}: ${ev.reason}`, "ev-failed");
+      else if (ev.type === "reply") log(`Bot: ${ev.text}`, "ev-reply");
+      else if (ev.type === "sabotage" || ev.type === "blessing") log(`${ev.viewer} bought ${ev.text}`);
+      else if (ev.type !== "ping" && ev.viewer) log(`${ev.viewer} ${ev.text}`);
+    };
+    es.onerror = () => { es.close(); setTimeout(connect, 3000); };
+  }
+
+  refresh();
+  setInterval(refresh, 1000);
+  loadSettings();
+  connect();
+</script>
+</body>
+</html>

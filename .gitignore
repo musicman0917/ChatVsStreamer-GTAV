@@ -1,0 +1,9 @@
+build/
+dist/
+# RPH's SDK: its license forbids uploading or redistributing it.
+third_party/rph_sdk/
+*.log
+*.user
+.vs/
+__pycache__/
+.claude/
