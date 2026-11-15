@@ -214,3 +214,7 @@ Twitch is the only platform for now, but nothing outside [src/TwitchChat.cpp](sr
 - RAGE Plugin Hook by MulleDK19 and LMS (separate download, not bundled)
 - Native signatures from [alloc8or's native DB](https://github.com/alloc8or/gta5-nativedb-data)
 - Grand Theft Auto V is a trademark of Take-Two Interactive. This is an unofficial fan mod, not affiliated with Rockstar Games or Take-Two.
+
+## License
+
+[MIT](LICENSE). That covers this mod's own code. Script Hook V and RAGE Plugin Hook are separate downloads with their own terms, and neither is part of this repository.
