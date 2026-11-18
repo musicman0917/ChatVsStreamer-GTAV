@@ -420,6 +420,7 @@
   table.fx thead th:last-child { border-top-right-radius: 14px; }
   table.fx tbody tr:last-child td { border-bottom: none; }
   table.fx tbody tr:hover { background: var(--panel-2); }
+  table.fx tbody tr { scroll-margin-top: 110px; }
   table.fx tbody tr:target { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
   .is-hidden { display: none !important; }
 
@@ -869,10 +870,11 @@
     else fallback();
   });
 
-  // A link to one effect, such as #fx-kill, should still land on it after the list is built.
+  // A link to one effect, such as #fx-kill, should still land on it once the list is built, and
+  // straight away rather than with the smooth scroll the rest of the page uses.
   if (location.hash) {
-    const el = document.getElementById(location.hash.slice(1));
-    if (el) el.scrollIntoView();
+    const el = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
   }
 })();
 </script>
