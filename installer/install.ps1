@@ -6,13 +6,19 @@
     <game>\ChatVsStreamerGTAV.asi          the plugin, loaded by Script Hook V's ASI loader
     %LOCALAPPDATA%\ChatVsStreamerGTAV\     overlay, control panel, settings, points, your token
 
-  If RAGE Plugin Hook is in the game folder, the mod runs through that instead, for game
-  versions Script Hook V doesn't support yet. rph-files.ps1 then adds the plugin in place
-  of the .asi. See "Which version of GTA V?" in the README.
+  If Script Hook V doesn't support your game version yet, the mod can run through RAGE Plugin
+  Hook (RPH) instead, and this walks you through that: copying RPH out of your own LSPDFR
+  download, the file that stops RPH's DirectStorage error on NVMe drives, and whether your
+  account gets write access to the game folder. rph-files.ps1 does the copying, and adds the
+  plugin in place of the .asi. Each step is skipped once it's done, so running this again
+  only does what's left. See "Which version of GTA V?" in the README.
 
   What it doesn't do: download Script Hook V or RAGE Plugin Hook. Each game patch needs a
-  matching build, so you get them from their own pages. For Script Hook V, this checks that
-  it's there, and whether the page lists your game's version.
+  matching build, and RPH's license forbids bundling it, so you get them from their own pages.
+  For Script Hook V, this checks that it's there, and whether the page lists your game's version.
+
+  The RPH questions are only asked when someone can answer them: at a console, or through
+  -Answers. Otherwise this changes nothing a question would have decided, and says what to run.
 
   Run from the release folder (next to ChatVsStreamerGTAV.asi).
 #>
@@ -22,14 +28,89 @@ param(
     [string]$BotUsername,
     [string]$OAuthToken,
     [string]$BroadcasterToken,
-    [switch]$SkipTwitchSetup
+    [switch]$SkipTwitchSetup,
+    # Set the mod up through RAGE Plugin Hook, whatever Script Hook V's page says.
+    [switch]$Rph,
+    # LSPDFR's zip, if it isn't in your Downloads folder.
+    [string]$RphZip,
+    # Answers to the RPH questions, in the order they're asked, separated by commas. An empty one
+    # is Enter. For running this with nobody at the keyboard, as the tests do.
+    [string]$Answers,
+    # Where to read which game versions Script Hook V supports: its page, or a saved copy of it.
+    [string]$ScriptHookPage = "https://www.dev-c.com/gtav/scripthookv/"
 )
 
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$scriptHookPage = "https://www.dev-c.com/gtav/scripthookv/"
+$scriptHookSite = "https://www.dev-c.com/gtav/scripthookv/" # where players get it, whatever -ScriptHookPage reads
 
 $gameExes = "GTA5_Enhanced.exe", "GTA5.exe", "PlayGTAV.exe"
+
+# What rph-files.ps1 -Install accepts: one exact zip, whose copy of RPH was built for one game
+# version. Keep these in step with that script.
+$rphZipName = "lspdfr_049_9695_Manual_Install_Enhanced_1158_16.zip"
+$rphGameVersion = "1.0.1158.16"
+$lspdfrPage = "https://www.lcpdfr.com/downloads/gta5mods/g17media/52970-lspd-first-response-enhanced-preview/"
+
+function Write-Ok($text) { Write-Host "   [OK] $text" -ForegroundColor Green }
+function Write-Warn($text) { Write-Host "   [!!] $text" -ForegroundColor Yellow }
+
+$atConsole = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected
+$givenAnswers = New-Object Collections.Generic.Queue[string]
+if ($PSBoundParameters.ContainsKey("Answers")) {
+    foreach ($answer in ($Answers -split ",")) { $givenAnswers.Enqueue($answer) }
+}
+$canAsk = $atConsole -or $givenAnswers.Count -gt 0
+
+# The next answer: one given ahead of time, or what gets typed. $null means nobody is there to ask.
+function Read-Answer($prompt) {
+    if ($givenAnswers.Count -gt 0) {
+        $answer = $givenAnswers.Dequeue()
+        Write-Host "${prompt}: $answer"
+        return $answer
+    }
+    if (-not $atConsole) { return $null }
+    return Read-Host $prompt
+}
+
+# Enter means yes. With nobody there to ask, it's no.
+function Read-YesNo($question) {
+    while ($true) {
+        $answer = Read-Answer "$question [Y/n]"
+        if ($null -eq $answer) { return $false }
+        if (-not $answer.Trim() -or $answer.Trim() -match '^(y|yes)$') { return $true }
+        if ($answer.Trim() -match '^(n|no)$') { return $false }
+        Write-Host "   Type y or n."
+    }
+}
+
+function Test-Writable($dir) {
+    $probe = Join-Path $dir ("cvs_write_test_{0}.tmp" -f [guid]::NewGuid().ToString("N"))
+    try {
+        $stream = [IO.File]::Open($probe, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        $stream.Dispose()
+        [IO.File]::Delete($probe)
+        return $true
+    } catch {
+        $inner = $_.Exception.InnerException
+        if ($_.Exception -is [UnauthorizedAccessException] -or $inner -is [UnauthorizedAccessException]) { return $false }
+        throw
+    }
+}
+
+# $true if the folder is on an NVMe drive, $false if it's on another kind, $null if Windows
+# doesn't say, as with RAID or a network share.
+function Test-NvmeDrive($path) {
+    try {
+        $letter = [IO.Path]::GetPathRoot((Resolve-Path -LiteralPath $path).ProviderPath).Substring(0, 1)
+        $bus = "$((Get-Partition -DriveLetter $letter -ErrorAction Stop | Get-Disk -ErrorAction Stop).BusType)"
+    } catch {
+        return $null
+    }
+    if ($bus -eq "NVMe") { return $true }
+    if ($bus -in "SATA", "ATA", "ATAPI", "USB", "SD", "MMC", "SAS", "SCSI") { return $false }
+    return $null
+}
 
 function Test-GameFolder($path) {
     if (-not $path -or -not (Test-Path $path)) { return $false }
@@ -87,9 +168,13 @@ function Get-GameVersion($path) {
 function Test-ScriptHookSupport($version) {
     if (-not $version) { return $null }
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $page = Invoke-WebRequest -Uri $scriptHookPage -UseBasicParsing -TimeoutSec 8
-        return [bool]($page.Content -match [regex]::Escape($version.Trim()))
+        if ($ScriptHookPage -notmatch '^https?://') {
+            $content = Get-Content -LiteralPath $ScriptHookPage -Raw
+        } else {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $content = (Invoke-WebRequest -Uri $ScriptHookPage -UseBasicParsing -TimeoutSec 8).Content
+        }
+        return [bool]($content -match [regex]::Escape($version.Trim()))
     } catch {
         return $null
     }
@@ -121,28 +206,139 @@ Write-Host "Game: $GamePath"
 $version = Get-GameVersion $GamePath
 if ($version) { Write-Host "Version: $version" }
 
-$usesRph = Test-Path (Join-Path $GamePath "RAGEPluginHook.exe")
-if ($usesRph) {
-    Write-Host "   [OK] RAGE Plugin Hook is installed, so the mod will run through it" -ForegroundColor Green
+# Gets the mod into the game through RAGE Plugin Hook, doing whichever steps are still to do.
+# Sets $script:rphReady once the mod is in. Otherwise it has stopped, having said why, for
+# something only the player can do. It's called as a statement, never for a value, so that what
+# rph-files.ps1 prints goes straight to the window.
+function Install-ThroughRph {
     $rphFiles = Join-Path $here "rph-files.ps1"
     if (-not (Test-Path $rphFiles)) { throw "This release doesn't include the RAGE Plugin Hook version of the mod." }
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $rphFiles -Mod -GamePath $GamePath
+    # Windows won't replace files that are in use.
+    if (@(Get-Process -Name "GTA5_Enhanced", "GTA5", "RAGEPluginHook" -ErrorAction SilentlyContinue).Count -gt 0) {
+        throw "Close the game and RAGE Plugin Hook first, then run this again. Nothing was changed."
+    }
+    $todo = @()
+
+    # RPH itself, out of the player's own LSPDFR download.
+    if (Test-Path (Join-Path $GamePath "RAGEPluginHook.exe")) {
+        Write-Ok "RAGE Plugin Hook is installed, so the mod will run through it"
+    } else {
+        Write-Host "`nRAGE Plugin Hook" -ForegroundColor Cyan
+        if ($version -and $version -ne $rphGameVersion) {
+            Write-Warn "This installer can only add the copy of RPH built for game version $rphGameVersion, and yours is $version."
+            Write-Host "        Look for a build that supports $version on LSPDFR's page: $lspdfrPage"
+            Write-Host "        Copy RAGEPluginHook.exe and the files beside it into the game folder yourself, then run this again."
+            return
+        }
+        if ($RphZip) {
+            $zip = $RphZip.Trim('"', ' ')
+        } else {
+            $downloads = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
+            $zip = Join-Path $downloads $rphZipName
+        }
+        if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) {
+            Write-Host "   RPH's license doesn't allow bundling it with this mod, so it comes out of your own download:"
+            Write-Host "     1. Open LSPDFR's Enhanced Preview page: $lspdfrPage"
+            Write-Host "     2. Download the manual install, named $(Split-Path -Leaf $zip)"
+            Write-Host "     3. Leave it zipped, in: $(Split-Path -Parent $zip)"
+            Write-Host "   Only RPH is copied out of it. LSPDFR itself stays out of your game."
+            while (-not (Test-Path -LiteralPath $zip -PathType Leaf)) {
+                $answer = Read-Answer "   Press Enter when the zip is there, or type skip to stop for now"
+                if ($null -eq $answer -or $answer.Trim() -match '^(s|skip)$') { return }
+                if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { Write-Warn "It isn't there yet: $zip" }
+            }
+        }
+        Write-Ok "Found $(Split-Path -Leaf $zip)"
+        $todo += "-Install", "-ZipPath", $zip
+    }
+
+    # With DirectStorage, which the game uses on NVMe drives, RPH stops at an error unless this file is there.
+    if (-not (Test-Path (Join-Path $GamePath "skipdscheck"))) {
+        $nvme = Test-NvmeDrive $GamePath
+        if ($nvme) {
+            Write-Host "   The game is on an NVMe drive, where RPH stops with a DirectStorage error. A file named skipdscheck prevents that, so it goes in too."
+        } elseif ($null -eq $nvme) {
+            Write-Host "   Windows didn't say what kind of drive the game is on. On an NVMe drive RPH stops with a DirectStorage error, so the file that prevents it, skipdscheck, goes in too."
+        }
+        if ($nvme -ne $false) { $todo += "-SkipDsCheck" }
+    }
+
+    # RPH writes into the game folder from inside the game, which Program Files only lets admins do.
+    if (Test-Writable $GamePath) {
+        Write-Ok "Your account can write to the game folder, so nothing needs admin rights"
+    } else {
+        Write-Host "`nAdmin rights" -ForegroundColor Cyan
+        Write-Host "   RPH writes its log into the game folder from inside the game, and Windows only lets admins write there."
+        Write-Host "     1. Give your account write access to the game folder. Recommended: nothing needs admin rights"
+        Write-Host "        after that. The cost is that any program running under your account could then change the"
+        Write-Host "        game's files, so never start the game or RPH with Run as administrator afterwards."
+        Write-Host "        rph-files.ps1 -RevokeWrite undoes it."
+        Write-Host "     2. Leave the folder as it is. StartGame.bat then asks for admin rights every time, and the"
+        Write-Host "        whole game runs as admin, including the code that reads Twitch chat."
+        $choice = $null
+        while ($choice -notin "1", "2") {
+            $choice = Read-Answer "   Type 1 or 2"
+            if ($null -eq $choice) { break }
+            $choice = $choice.Trim()
+        }
+        if ($choice -eq "1") {
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $rphFiles -AllowWrite -GamePath $GamePath
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Writable $GamePath)) {
+                Write-Warn "Your account still can't write to the game folder, so the next step asks for admin rights instead."
+            }
+        } elseif ($null -eq $choice) {
+            Write-Host "   Nobody is here to choose, so the folder stays as it is. For the first option, run: rph-files.ps1 -AllowWrite"
+        }
+    }
+
+    # One call, so there's at most one more admin prompt.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $rphFiles @todo -Mod -GamePath $GamePath
     if ($LASTEXITCODE -ne 0) { throw "Couldn't add the mod for RAGE Plugin Hook. The reason is above." }
+    $script:rphReady = $true
+}
+
+# Script Hook V has to be there for the plugin to load at all, and it only runs on game versions
+# it knows about, which is the usual reason a mod stops working after a patch. RPH is the other
+# way in.
+$useRph = $Rph -or (Test-Path (Join-Path $GamePath "RAGEPluginHook.exe"))
+$supported = $null
+if (-not $useRph) {
+    $supported = Test-ScriptHookSupport $version
+    if ($supported -eq $false) {
+        Write-Warn "Script Hook V's page doesn't list version $version, so it can't load mods into this game yet."
+        # A release built without RPH's SDK has no RPH version of the mod to offer.
+        $hasRphBuild = Test-Path (Join-Path $here "rph-files.ps1")
+        if ($hasRphBuild -and $version -eq $rphGameVersion) {
+            Write-Host "`nRAGE Plugin Hook (RPH) is another way in, and this mod runs through it too. It takes a few more"
+            Write-Host "steps, which this installer does with you: getting RPH out of LSPDFR's download, a fix for NVMe"
+            Write-Host "drives, and letting the game run without admin rights."
+            if ($canAsk) { $useRph = Read-YesNo "Set the mod up through RAGE Plugin Hook?" }
+            else { Write-Host "To do that, run: install.ps1 -Rph" }
+        } elseif ($hasRphBuild) {
+            Write-Host "        If you add a copy of RAGE Plugin Hook that supports $version yourself, run this again and the mod will use it."
+        }
+        if (-not $useRph) {
+            Write-Host "        Until a new release of Script Hook V adds this version, the mod won't load through it."
+            Write-Host "        Keep checking: $scriptHookSite"
+            Write-Host "        Nothing here needs reinstalling after that, apart from replacing Script Hook V's files."
+        }
+    }
+}
+
+if ($useRph) {
+    $script:rphReady = $false
+    Install-ThroughRph
+    if (-not $script:rphReady) {
+        Write-Host "`nNot finished: the mod isn't in the game yet. Run this again when you're ready, and it carries on from here.`n" -ForegroundColor Yellow
+        exit 1
+    }
 } else {
     $asi = Join-Path $here "ChatVsStreamerGTAV.asi"
     if (-not (Test-Path $asi)) { throw "ChatVsStreamerGTAV.asi not found next to install.ps1" }
 
-    # Script Hook V has to be there for the plugin to load at all, and it only runs on game
-    # versions it knows about, which is the usual reason a mod stops working after a patch.
-    $supported = Test-ScriptHookSupport $version
-    if ($supported -eq $false) {
-        Write-Host "   [!!] Script Hook V's page doesn't list version $version." -ForegroundColor Yellow
-        Write-Host "        It won't run on this version until a new release adds it, and neither will this mod."
-        Write-Host "        Keep checking: $scriptHookPage"
-        Write-Host "        Nothing here needs reinstalling after that, apart from replacing Script Hook V's files."
-    } elseif ($supported -eq $true) {
+    if ($supported -eq $true) {
         Write-Host "   [OK] Script Hook V's page lists this version" -ForegroundColor Green
-    } elseif ($version) {
+    } elseif ($null -eq $supported -and $version) {
         Write-Host "   [??] Couldn't check Script Hook V's page. Make sure it lists version $version." -ForegroundColor Yellow
     }
 
@@ -153,7 +349,7 @@ if ($usesRph) {
     } else {
         Write-Host "   [!!] Script Hook V isn't installed. The mod won't load without it." -ForegroundColor Yellow
         if ($supported -ne $false) {
-            Write-Host "        1. Download the latest version from $scriptHookPage"
+            Write-Host "        1. Download the latest version from $scriptHookSite"
             Write-Host "        2. Copy ScriptHookV.dll and dinput8.dll from its bin folder into:"
             Write-Host "           $GamePath"
         }
@@ -225,7 +421,7 @@ Web=7373
 }
 
 Write-Host "`nNearly there:" -ForegroundColor Cyan
-if ($usesRph) {
+if ($useRph) {
     Write-Host "  1. Story mode only. Turn BattlEye off in the Rockstar Games Launcher's settings for GTA V."
     Write-Host "     Start the game with StartGame.bat in this folder, not the launcher's Play button."
 } else {
@@ -237,7 +433,7 @@ Write-Host "  2. OBS browser source:  http://localhost:7373/       (1920x1080)"
 Write-Host "  3. Control panel:       http://localhost:7373/panel  (prices, toggles, test buttons)"
 Write-Host "     Both come up shortly after the game starts."
 Write-Host "  4. Log: $dataDir\ChatVsStreamer.log`n"
-if ($usesRph) {
+if ($useRph) {
     Write-Host "Before going online, run rph-files.ps1 -Remove and turn BattlEye back on.`n" -ForegroundColor Yellow
 } else {
     Write-Host "Before going online, delete $GamePath\ChatVsStreamerGTAV.asi and Script Hook V's files.`n" -ForegroundColor Yellow

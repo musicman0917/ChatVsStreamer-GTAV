@@ -1,6 +1,7 @@
 #Requires -Version 5.1
 <#
-  Adds RAGE Plugin Hook and this mod to the game folder, or takes them back out.
+  Adds RAGE Plugin Hook and this mod to the game folder, or takes them back out. RunMe.bat
+  (install.ps1) runs these steps for you, and they're here to run yourself if you'd rather.
 
     rph-files.ps1 -Install              copy RPH out of your own LSPDFR download
     rph-files.ps1 -Mod                  add this mod, and have RPH load it when the game starts
@@ -129,8 +130,15 @@ function Invoke-Elevated {
 function Invoke-Install {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+    # -AllowWrite starts this record too, so it only means RPH is installed if RPH is listed in it.
     $manifest = Join-Path $GamePath $manifestName
-    if (Test-Path -LiteralPath $manifest) { throw "This script has already installed RPH here. Run -Remove first." }
+    $recorded = @()
+    if (Test-Path -LiteralPath $manifest) {
+        $recorded = @(Get-Content -LiteralPath $manifest)
+        if (@($recorded | Where-Object { $_ -like "file`t$($required[0])`t*" }).Count -gt 0) {
+            throw "This script has already installed RPH here. Run -Remove first."
+        }
+    }
     if (-not (Test-Path -LiteralPath $ZipPath)) { throw "Can't find the LSPDFR zip at: $ZipPath" }
 
     $hash = (Get-FileHash -LiteralPath $ZipPath -Algorithm SHA256).Hash
@@ -154,9 +162,18 @@ function Invoke-Install {
             throw "Already in the game folder, so nothing was changed: $($clashes -join ', ')"
         }
 
-        # Written before copying, so -Remove can still clean up if a copy fails part-way.
+        # Written before copying, so -Remove can still clean up if a copy fails part-way. A record
+        # that's already there is kept, and anything that has appeared since counts as not ours.
         $lines = New-Object Collections.Generic.List[string]
-        foreach ($item in Get-ChildItem -LiteralPath $GamePath -Force) { $lines.Add("existing`t$($item.Name)") }
+        $listed = @{}
+        foreach ($line in $recorded) {
+            $lines.Add($line)
+            $name = ($line -split "`t")[1]
+            if ($name) { $listed[$name] = $true }
+        }
+        foreach ($item in Get-ChildItem -LiteralPath $GamePath -Force) {
+            if ($item.Name -ne $manifestName -and -not $listed.ContainsKey($item.Name)) { $lines.Add("existing`t$($item.Name)") }
+        }
         $sha = [Security.Cryptography.SHA256]::Create()
         try {
             foreach ($entry in $entries) {

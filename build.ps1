@@ -51,6 +51,11 @@ if ($Test) {
         $suitesRun++
     }
     if ($suitesRun -eq 0) { throw "No tests ran." }
+
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "tests\InstallerTest.ps1")
+    # 3 means GTA V or RPH is running, which the installer refuses to work beside.
+    if ($LASTEXITCODE -eq 3) { Write-Host "The installer tests DID NOT RUN." -ForegroundColor Yellow }
+    elseif ($LASTEXITCODE -ne 0) { throw "Installer tests failed" }
 }
 
 $dist = Join-Path $root "dist"

@@ -42,7 +42,7 @@ Under RPH, which only loads .NET plugins, [a thin C# plugin](src/rph/plugin/Chat
 ## Install
 
 1. Install [Script Hook V](https://www.dev-c.com/gtav/scripthookv/): copy `ScriptHookV.dll` and `dinput8.dll` from its `bin` folder next to the game's exe. It has to support your exact game version, so after a game patch, wait for a new release.
-2. Double-click `RunMe.bat` in the release folder. It finds the game, warns you if Script Hook V doesn't list your version, copies the plugin and asks for your Twitch details. (The default Rockstar folder needs **Run as administrator**.)
+2. Double-click `RunMe.bat` in the release folder. It finds the game, copies the plugin and asks for your Twitch details. If Script Hook V doesn't list your version, it says so, and offers to set the mod up through RAGE Plugin Hook instead when it can. (The default Rockstar folder needs **Run as administrator**.)
 3. If mods won't load in story mode, turn BattlEye off in the Rockstar Games Launcher's settings for GTA V.
 4. Start story mode, then add an OBS browser source: `http://localhost:7373/` at 1920×1080.
 
@@ -50,17 +50,22 @@ Your token, settings, points and log are in `%LOCALAPPDATA%\ChatVsStreamerGTAV`,
 
 ### Install with RAGE Plugin Hook
 
-RPH's readme forbids redistributing it, so it isn't included.
+RPH's readme forbids redistributing it, so it isn't included, and you download it yourself. `RunMe.bat` does the rest with you.
 
-1. Get RPH. If you downloaded LSPDFR's Enhanced Preview manual install (`lspdfr_049_9695_Manual_Install_Enhanced_1158_16.zip`) to your Downloads folder, `rph-files.ps1 -Install` copies only RPH out of it. That exact zip is the only one it accepts.
+1. Download LSPDFR's Enhanced Preview manual install (`lspdfr_049_9695_Manual_Install_Enhanced_1158_16.zip`) and leave it zipped in your Downloads folder. RPH comes inside it. That exact zip is the only one the installer accepts, and its copy of RPH was built for game version `1.0.1158.16`.
 2. Turn BattlEye off in the Rockstar Games Launcher's settings for GTA V.
-3. On an NVMe drive, run `rph-files.ps1 -SkipDsCheck` too. Otherwise RPH stops with a DirectStorage error and closes the game.
-4. Double-click `RunMe.bat`. It sees RPH in the game folder and installs the plugin instead of the `.asi`.
-5. Start the game with `StartGame.bat` every time, **not the launcher's Play button or `RAGEPluginHook.exe`**, and add the OBS source as above.
+3. Double-click `RunMe.bat`. When Script Hook V doesn't list your game version, it offers to use RPH, then:
+   - copies only RPH out of the zip, leaving LSPDFR itself out of your game
+   - adds the `skipdscheck` file if the game is on an NVMe drive, where RPH otherwise stops with a DirectStorage error and closes the game
+   - asks how the game should get to write to its own folder, if it can't already (see below)
+   - adds the plugin instead of the `.asi`
+4. Start the game with `StartGame.bat` every time, **not the launcher's Play button or `RAGEPluginHook.exe`**, and add the OBS source as above.
 
-RPH writes into the game folder from inside the game, and Program Files only lets admins do that. Pick one of these:
+Each step is skipped once it's done, so running `RunMe.bat` again, to update the mod for example, only does what's left. If the zip isn't there yet, it says where to get it and waits. `install.ps1 -Rph` chooses RPH whatever Script Hook V's page says, and `-RphZip <path>` points it at a zip somewhere else. Each step is also a command of its own in `rph-files.ps1` (`-Install`, `-SkipDsCheck`, `-AllowWrite`, `-Mod`), if you'd rather run them yourself. For any other game version, add a copy of RPH that supports it yourself, and `RunMe.bat` will use it.
 
-- **Recommended: run `rph-files.ps1 -AllowWrite` once.** Your account gets write access to the game folder, so nothing needs admin rights, and `StartGame.bat` just works. The cost is that any program running under your account could then change the game's files, so never start RPH or the game with Run as administrator after this. `-RevokeWrite` undoes it, and so does `-Remove`.
+RPH writes into the game folder from inside the game, and Program Files only lets admins do that. The installer asks which of these you want:
+
+- **Recommended: give your account write access** (`rph-files.ps1 -AllowWrite`). Nothing then needs admin rights, and `StartGame.bat` just works. The cost is that any program running under your account could then change the game's files, so never start RPH or the game with Run as administrator after this. `-RevokeWrite` undoes it, and so does `-Remove`.
 - **Keep the folder as it is.** `StartGame.bat` asks you to quit the launcher, then asks for permission, because the game only gets admin rights if RPH opens the launcher itself. Everything in the game then runs as admin, including the code that reads Twitch chat, so this isn't recommended.
 
 On an NVMe drive, the game holds open every file already in its folder. If RPH's log from the last run is still there, RPH can't open it and the game crashes with a misleading `Could not hook game process`. `StartGame.bat` moves that log to the data folder first, as `RagePluginHook.previous.log`.
@@ -173,6 +178,8 @@ The RPH plugin also needs the .NET SDK and RPH's own SDK: copy `RagePluginHook.d
 It then runs all of that again on the RPH build, with the test program standing in for the C# plugin, plus what only that build needs: reloading the plugin, noticing a loaded save and polling hotkeys. The C# plugin itself only runs in the real game. [tools/rph_probe](tools/rph_probe/CvsProbe.cs) is a read-only plugin that checks the kinds of native call it depends on there.
 
 If Smart App Control blocks a build, its tests are reported as not run, rather than failed.
+
+Last, [tests/InstallerTest.ps1](tests/InstallerTest.ps1) runs the installer scripts against made-up game folders under `%TEMP%`: every branch of `install.ps1`, beside a stand-in for `rph-files.ps1`, then the real `rph-files.ps1` with a made-up zip. It never touches a real game, RPH or your data folder. The prompts for admin rights and typing answers at a real keyboard are the parts it can't cover. It's reported as not run while GTA V or RPH is running, because the installer refuses to work then.
 
 To try the control panel and overlay with no game running, using the same simulated game at normal speed:
 

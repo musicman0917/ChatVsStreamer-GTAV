@@ -17,7 +17,7 @@ Start the game with `StartGame.bat`, load story mode, and check each of these in
 | Check | If it fails |
 |---|---|
 | The BattlEye window doesn't appear | BattlEye is still on. Turn it off in the launcher's settings for GTA V. |
-| RPH doesn't show a DirectStorage message | On an NVMe drive, run `rph-files.ps1 -SkipDsCheck`. |
+| RPH doesn't show a DirectStorage message | On an NVMe drive the installer adds the `skipdscheck` file that prevents it. If it's missing, run `RunMe.bat` again, or `rph-files.ps1 -SkipDsCheck`. |
 | RPH doesn't say `Could not hook game process` | RPH couldn't open its log from the last run, which `StartGame.bat` clears first. If you used `StartGame.bat` anyway, send in the `crashreport` file from the game folder. |
 | `RagePluginHook.log` in the game folder exists and shows `Chat vs Streamer: started` | `Windows error 4551` there means Smart App Control blocked `ChatVsStreamerCore.dll`. If the plugin was never mentioned, press F4 in game and type `LoadPlugin ChatVsStreamer.dll`. If the game crashed instead and there's no log, the launcher probably didn't have admin rights, so use `StartGame.bat`. |
 | `%LOCALAPPDATA%\ChatVsStreamerGTAV\ChatVsStreamer.log` shows `Running through RAGE Plugin Hook` | Look in `RagePluginHook.log` for a line starting `Chat vs Streamer:`. |
@@ -28,6 +28,10 @@ Start the game with `StartGame.bat`, load story mode, and check each of these in
 If a native fails, `RagePluginHook.log` gets one line for it starting `Chat vs Streamer: native 0x`. Send that line in with your report.
 
 **After the first launch:** close the game and start it again with `StartGame.bat`, to check a second launch works too. It moves the last run's RPH log to `%LOCALAPPDATA%\ChatVsStreamerGTAV\RagePluginHook.previous.log`, so look there for anything from before the restart.
+
+**A first install through `RunMe.bat`** has only been run against made-up game folders (`tests/InstallerTest.ps1`), never on a real game that had no RPH yet. The tester's game was set up by hand, one command at a time, before the walkthrough existed.
+- [ ] On a game whose version Script Hook V doesn't list, with LSPDFR's zip in Downloads: `RunMe.bat` offers RPH, finds the zip, asks about write access to the game folder, and Windows asks for permission once. The game then starts with `StartGame.bat`.
+- [ ] The same without the zip: it says where to get it, and carries on when you press Enter once the zip is there.
 
 ### With Script Hook V
 
