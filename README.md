@@ -4,6 +4,8 @@ A GTA V story mode mod that lets your Twitch viewers earn chaos points by watchi
 
 Built by [NeighborhoodofMusic](https://twitch.tv/neighborhoodofmusic).
 
+**For viewers:** every chat command, effect and default price is on [The Chaos Dispatch](https://musicman0917.github.io/ChatVsStreamer-GTAV/).
+
 > **Status: most effects working in the real game.** On Enhanced `1.0.1158.16` through RAGE Plugin Hook, 49 of the 64 effects have been seen working (6 November 2026), fired from the control panel's interface. The 12 newest and the 3 reworked ones (`ragdoll`, `eject`, `drunk`) haven't been tried in-game, and neither have the guard rails in the checklist. The mod has joined real Twitch chat, but a real purchase hasn't been confirmed. The Script Hook V build has never run in the real game. Everything except GTA V itself has automated tests. [docs/IN_GAME_TEST.md](docs/IN_GAME_TEST.md) tracks what's confirmed.
 
 ## Which version of GTA V?
@@ -113,7 +115,7 @@ If an effect can't run yet, it waits in the queue. Reasons include a cutscene, a
 | **Devastating** | `carmageddon` `flood` `carbomb` `airstrike` `tank` `airsupport` `kill` `nuclear` |
 | **Blessing** | `clearsky` `daybreak` `heal` `armor` `ammo` `repair` `cash` `caffeine` `clean` `guns` `car` `plotarmor` |
 
-Effects are defined once, in the table at the bottom of [src/Effects.cpp](src/Effects.cpp). Chat, the overlay, the panel and `settings.ini` all read from it.
+Effects are defined once, in the table at the bottom of [src/Effects.cpp](src/Effects.cpp). Chat, the overlay, the panel, `settings.ini` and the commands page all read from it.
 
 Effects that could break a mission (teleports, vehicle swaps, clock changes) wait for the mission to end. You can turn that off in the panel.
 
@@ -194,6 +196,12 @@ To check the Twitch connection for real (anonymous and read-only, it never posts
 ```powershell
 .\build\Release\TestHost.exe "$PWD\build" "$PWD" --twitch-smoke yourchannel
 ```
+
+### The commands page
+
+[docs/index.html](docs/index.html) is The Chaos Dispatch, the viewers' page of commands, effects and point rules, published by GitHub Pages from `main`, folder `/docs`. Its data, [docs/catalog.js](docs/catalog.js), comes from the source: [tools/gen_commands_page.ps1](tools/gen_commands_page.ps1) reads the effect table, the default settings and the point rules, and `build.ps1` runs it every time, so a new effect or price shows up there by itself once it's pushed. The script stops the build if it can't read something, so keep each effect on one line in the table. The page's wording is in `docs/index.html`.
+
+The page shows the default prices. If you host your own copy, a fork publishes the same way.
 
 ### Adding a native
 

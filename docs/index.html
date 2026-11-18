@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Chaos Dispatch</title>
+<meta name="description" content="Every Chat vs Streamer command for GTA V story mode: what each effect does, what it costs, and how chat earns chaos points.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!--
+  The effects, prices and point rules on this page come from catalog.js, which
+  tools/gen_commands_page.ps1 writes from the mod's source on every build. Edit the
+  wording here, but change numbers and effects in the source.
+-->
+
+<style>
+  :root {
+    /* Golden hour: sun-bleached concrete and white panels. */
+    --bg: #f4ede2;
+    --glow-a: rgba(255, 150, 70, 0.42);
+    --glow-b: rgba(255, 84, 112, 0.16);
+    --panel: #ffffff;
+    --panel-2: #f8f2e9;
+    --panel-3: #efe4d3;
+    --line: #e2d4bf;
+    --text: #1b1e2c;
+    --text-soft: #4f556d;
+    --text-faint: #6f7590;
+    --accent: #a8500a;
+    --accent-glow: transparent;
+    --red: #cf2742;
+    --blue: #146fb2;
+    --green: #0f7f55;
+    --green-bg: #e3f4ec;
+    --star: #d99a06;
+    --star-off: #dccdb4;
+    --chip: #f4ece0;
+    --skyline: #e9dcc8;
+    --skyline-2: #e1d1b9;
+    --window: rgba(168, 80, 10, 0.32);
+    --shadow: 0 1px 0 rgba(60, 40, 10, 0.04), 0 12px 32px rgba(60, 40, 10, 0.10);
+
+    --font-display: 'Oswald', 'Arial Narrow', 'Segoe UI', sans-serif;
+    --font-body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  }
+
+  /* After dark: navy, sodium lights and neon. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0d1a;
+      --glow-a: rgba(255, 120, 66, 0.20);
+      --glow-b: rgba(120, 76, 255, 0.17);
+      --panel: #131830;
+      --panel-2: #1a2040;
+      --panel-3: #232b52;
+      --line: #2a3360;
+      --text: #eef0fb;
+      --text-soft: #a8afd4;
+      --text-faint: #8a91b8;
+      --accent: #ffb347;
+      --accent-glow: rgba(255, 179, 71, 0.35);
+      --red: #ff5470;
+      --blue: #4cc9f0;
+      --green: #3ddc97;
+      --green-bg: rgba(61, 220, 151, 0.12);
+      --star: #ffd166;
+      --star-off: #343d6b;
+      --chip: #1d2446;
+      --skyline: #161c38;
+      --skyline-2: #1c2346;
+      --window: rgba(255, 179, 71, 0.55);
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0d1a;
+    --glow-a: rgba(255, 120, 66, 0.20);
+    --glow-b: rgba(120, 76, 255, 0.17);
+    --panel: #131830;
+    --panel-2: #1a2040;
+    --panel-3: #232b52;
+    --line: #2a3360;
+    --text: #eef0fb;
+    --text-soft: #a8afd4;
+    --text-faint: #8a91b8;
+    --accent: #ffb347;
+    --accent-glow: rgba(255, 179, 71, 0.35);
+    --red: #ff5470;
+    --blue: #4cc9f0;
+    --green: #3ddc97;
+    --green-bg: rgba(61, 220, 151, 0.12);
+    --star: #ffd166;
+    --star-off: #343d6b;
+    --chip: #1d2446;
+    --skyline: #161c38;
+    --skyline-2: #1c2346;
+    --window: rgba(255, 179, 71, 0.55);
+    --shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 520px at 12% -8%, var(--glow-a), transparent 62%),
+      radial-gradient(900px 480px at 92% -6%, var(--glow-b), transparent 62%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: #1b1e2c; }
+  code, .mono { font-family: var(--font-mono); }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 28px 16px 72px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .star { width: 14px; height: 14px; flex: none; color: var(--star); }
+  .star.off { color: var(--star-off); }
+  .stars { display: inline-flex; gap: 2px; align-items: center; }
+
+  /* ---------- hero ---------- */
+
+  .hero { position: relative; overflow: hidden; padding: 0; }
+  .lightbar { height: 5px; background: linear-gradient(90deg, var(--red) 0 50%, var(--blue) 50% 100%); }
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 32px;
+    align-items: center;
+    padding: 34px 34px 18px;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+  }
+  h1.title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: clamp(2.8rem, 7.4vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    margin: 12px 0 16px;
+  }
+  h1.title .hot { display: block; color: var(--accent); text-shadow: 0 0 28px var(--accent-glow); }
+  .dek { margin: 0; font-size: clamp(1.05rem, 2.1vw, 1.2rem); color: var(--text-soft); max-width: 52ch; text-wrap: pretty; }
+
+  .hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .hero-links a {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 9px 14px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+  }
+  .hero-links a.primary { background: var(--accent); border-color: var(--accent); color: #1b1e2c; }
+  .hero-links a:hover { border-color: var(--accent); }
+  .hero-links a:focus-visible, .filter-btn:focus-visible, .cmd-chip:focus-visible, .search input:focus-visible, .catnav a:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  .chatlog {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .chatlog-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+  }
+  .live { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 25%, transparent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.45; } }
+  .chatlog-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 7px; }
+  .msg { margin: 0; overflow-wrap: anywhere; }
+  .msg .who { font-weight: 700; }
+  .msg .who.viewer { color: var(--blue); }
+  .msg .who.bot { color: var(--green); }
+  .msg code { font-size: 13px; }
+  .msg.feed {
+    margin-top: 3px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--panel-3);
+    font-size: 13px;
+    color: var(--text-soft);
+  }
+  .msg.feed b { color: var(--text); }
+
+  .skyline { display: block; width: 100%; height: 96px; margin-top: -6px; }
+
+  /* ---------- sections ---------- */
+
+  .divider { display: flex; align-items: center; gap: 14px; margin: 40px 0; }
+  .divider .line { flex: 1; height: 1px; background: var(--line); }
+  .divider svg { flex: none; }
+
+  .block-head { margin: 0 0 16px; padding: 0 2px; }
+  .block-head h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 1.7rem;
+    margin: 0 0 4px;
+  }
+  .block-head p { margin: 0; color: var(--text-soft); max-width: 68ch; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .step { padding: 22px 22px 24px; }
+  .step-num {
+    width: 42px; height: 42px;
+    display: grid; place-items: center;
+    border-radius: 10px;
+    background: var(--panel-3);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .step h3 { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 1.05rem; margin: 0 0 6px; }
+  .step p { margin: 0; color: var(--text-soft); font-size: 15px; }
+
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; padding: 18px; }
+  .meta-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 15px; }
+  .meta-card .cmds { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .meta-card p { margin: 0; font-size: 14px; color: var(--text-soft); }
+  .meta-card.mod { border-color: color-mix(in srgb, var(--red) 55%, var(--line)); }
+  .badge-mod {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--red);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+  }
+
+  /* ---------- chips ---------- */
+
+  .cmd-chip {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  button.cmd-chip { cursor: copy; }
+  button.cmd-chip:hover { border-color: var(--accent); }
+  .cmd-chip.short { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+  .cmd-chip.copied::after { content: "copied"; font-family: var(--font-body); font-weight: 600; font-size: 11px; color: var(--green); }
+
+  /* ---------- points ---------- */
+
+  .points-panel { padding: 8px 0 4px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  table.econ th, table.econ td { text-align: left; padding: 11px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.econ th {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  table.econ tbody tr:last-child td { border-bottom: none; }
+  td.pts { font-family: var(--font-mono); font-weight: 700; white-space: nowrap; color: var(--green); }
+  td.note { color: var(--text-soft); font-size: 14.5px; }
+
+  .mult-row { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 18px 16px; align-items: center; }
+  .mult-row .label { font-size: 14px; color: var(--text-soft); margin-right: 4px; }
+  .mchip { font-family: var(--font-mono); font-size: 13px; background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+  .mchip b { color: var(--accent); }
+
+  .callouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+  .callout { padding: 16px 18px; font-size: 15px; color: var(--text-soft); }
+  .callout strong { display: block; color: var(--text); font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.98rem; margin-bottom: 4px; }
+
+  /* ---------- toolbar ---------- */
+
+  .toolbar-wrap { position: sticky; top: 10px; z-index: 5; margin-bottom: 18px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 14px; }
+  .search { position: relative; flex: 1 1 240px; min-width: 200px; }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-faint); pointer-events: none; }
+  .search input {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 9px 12px 9px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+  }
+  .search input::placeholder { color: var(--text-faint); }
+  .filters { display: flex; gap: 6px; }
+  .filter-btn {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 13px 7px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text-soft);
+    cursor: pointer;
+  }
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--panel); }
+  .stat-line { font-family: var(--font-mono); font-size: 12px; color: var(--text-soft); }
+  .stat-line b { color: var(--text); }
+
+  .catnav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .catnav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text-soft);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 13px;
+  }
+  .catnav a:hover { color: var(--text); border-color: var(--accent); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--text-soft); margin: 0 0 26px; padding: 0 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+
+  /* ---------- the effects ---------- */
+
+  .tier { margin-bottom: 34px; scroll-margin-top: 96px; }
+  .tier-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; padding: 0 2px; }
+  .tier-head h3 { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 1.4rem; margin: 0; }
+  .count { font-family: var(--font-mono); font-size: 12px; color: var(--text-soft); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; background: var(--panel); }
+  .blessing-badge { font-family: var(--font-display); font-weight: 500; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); background: var(--green-bg); border-radius: 5px; padding: 2px 8px; }
+  .tier-blurb { margin: 0 0 12px; padding: 0 2px; color: var(--text-soft); font-size: 15px; font-style: italic; }
+
+  /* Fixed widths, so the columns line up from one tier to the next. */
+  table.fx { table-layout: fixed; }
+  table.fx th.cmd-head { width: 210px; }
+  table.fx th.cost-head { width: 120px; }
+  table.fx th, table.fx td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.fx thead th {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: var(--panel-2);
+  }
+  table.fx thead th:first-child { border-top-left-radius: 14px; }
+  table.fx thead th:last-child { border-top-right-radius: 14px; }
+  table.fx tbody tr:last-child td { border-bottom: none; }
+  table.fx tbody tr:hover { background: var(--panel-2); }
+  table.fx tbody tr:target { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+  .is-hidden { display: none !important; }
+
+  .cmd-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .fx-name { font-weight: 700; font-size: 15.5px; margin-bottom: 2px; }
+  .fx-desc { color: var(--text-soft); font-size: 14.5px; max-width: 60ch; }
+  .needs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .need {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-soft);
+    background: var(--panel-3);
+    border-radius: 999px;
+    padding: 2px 10px;
+    cursor: help;
+  }
+  td.cost { font-family: var(--font-mono); font-weight: 700; white-space: nowrap; color: var(--accent); text-align: right; }
+  table.fx thead th.cost-head { text-align: right; }
+
+  .empty-state { display: none; text-align: center; padding: 36px 24px; color: var(--text-soft); }
+  .empty-state.is-visible { display: block; }
+
+  footer { margin-top: 44px; padding: 24px 22px; text-align: center; color: var(--text-soft); font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; }
+  footer .mono { font-size: 12.5px; }
+  footer a { color: var(--text); }
+
+  @media (max-width: 820px) {
+    .hero-inner { grid-template-columns: 1fr; padding: 26px 20px 12px; gap: 22px; }
+    .steps, .callouts { grid-template-columns: 1fr; }
+    .toolbar-wrap { position: static; }
+    table.fx thead { display: none; }
+    table.fx, table.fx tbody, table.fx tr, table.fx td { display: block; width: 100%; }
+    table.fx tr { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    table.fx tbody tr:last-child { border-bottom: none; }
+    table.fx td { padding: 0; border: none; }
+    td.cmd-col { margin-bottom: 8px; }
+    .cmd-stack { flex-direction: row; flex-wrap: wrap; }
+    td.cost { text-align: left; margin-top: 8px; }
+    table.econ th, table.econ td { padding: 10px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.6l2.85 6.08 6.65.78-4.92 4.55 1.3 6.57L12 17.32 6.12 20.58l1.3-6.57L2.5 9.46l6.65-.78z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zm5-1.5L20 20"/></symbol>
+  <symbol id="i-lights" viewBox="0 0 40 16"><rect x="1" y="4" width="17" height="8" rx="4" fill="var(--red)"/><rect x="22" y="4" width="17" height="8" rx="4" fill="var(--blue)"/></symbol>
+</svg>
+
+<div class="page">
+
+  <header class="panel hero">
+    <div class="lightbar" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow"><svg class="star"><use href="#i-star"/></svg> Chat vs Streamer &middot; GTA V story mode</div>
+        <h1 class="title">The Chaos <span class="hot">Dispatch</span></h1>
+        <p class="dek">Every command your chat can send after the streamer: what it does, what it costs, and whether it's backup or an ambush.</p>
+        <nav class="hero-links" aria-label="On this page">
+          <a class="primary" href="#effects">Browse the effects</a>
+          <a href="#points">How points work</a>
+          <a href="https://github.com/musicman0917/ChatVsStreamer-GTAV">Get the mod</a>
+        </nav>
+      </div>
+      <div class="chatlog" aria-label="An example in chat">
+        <div class="chatlog-head"><span class="live"></span> Stream chat</div>
+        <div class="chatlog-body" id="chat-demo"></div>
+      </div>
+    </div>
+    <svg class="skyline" id="skyline" viewBox="0 0 1080 96" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+  </header>
+
+  <div class="divider" aria-hidden="true"><span class="line"></span><svg width="40" height="16"><use href="#i-lights"/></svg><span class="line"></span></div>
+
+  <section class="steps" aria-label="How the shop works">
+    <div class="panel step">
+      <div class="step-num">1</div>
+      <h3>Earn</h3>
+      <p>Chat, sub, cheer or raid, and chaos points add up on their own. No purchase needed to start.</p>
+    </div>
+    <div class="panel step">
+      <div class="step-num">2</div>
+      <h3>Browse</h3>
+      <p><span class="cmd-chip">!shop</span> lists the tiers, <span class="cmd-chip">!shop painful</span> lists one with prices, and <span class="cmd-chip">!info &lt;name&gt;</span> explains any effect.</p>
+    </div>
+    <div class="panel step">
+      <div class="step-num">3</div>
+      <h3>Buy</h3>
+      <p><span class="cmd-chip">!buy &lt;name&gt;</span> spends the points. If the moment's wrong, it waits for a better one, and refunds if that never comes.</p>
+    </div>
+  </section>
+
+  <div class="divider" aria-hidden="true"><span class="line"></span><svg width="40" height="16"><use href="#i-lights"/></svg><span class="line"></span></div>
+
+  <section id="talk">
+    <div class="block-head">
+      <h2>Talking to the shop</h2>
+      <p>Anyone in chat can use these. Mods get a few more.</p>
+    </div>
+    <div class="panel meta-grid">
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip">!balance</span><span class="cmd-chip">!points</span></div>
+        <p>How many chaos points you have.</p>
+      </div>
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip">!shop</span></div>
+        <p>The five tiers, and how to see each one.</p>
+      </div>
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip">!shop &lt;tier&gt;</span></div>
+        <p>Everything in one tier at today's prices: nuisance, disruptive, painful, devastating or blessing.</p>
+      </div>
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip">!info &lt;name&gt;</span></div>
+        <p>What one effect does, its tier and its price.</p>
+      </div>
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip">!buy &lt;name&gt;</span></div>
+        <p>Spend the points. If others bought first, the bot tells you your place in the queue.</p>
+      </div>
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip short">!&lt;name&gt;</span></div>
+        <p id="shortcut-note">Some effects have a command of their own, at the same price. They're marked below.</p>
+      </div>
+      <div class="meta-card">
+        <div class="cmds"><span class="cmd-chip">!give &lt;user&gt; &lt;amount&gt;</span></div>
+        <p>Hand some of your points to someone else.</p>
+      </div>
+      <div class="meta-card mod">
+        <span class="badge-mod">Mods</span>
+        <div class="cmds"><span class="cmd-chip">!give &lt;user&gt; &lt;amount&gt;</span></div>
+        <p>From a mod, the points are new, so the mod's own balance doesn't drop.</p>
+      </div>
+      <div class="meta-card mod">
+        <span class="badge-mod">Mods</span>
+        <div class="cmds"><span class="cmd-chip">!cvs off</span><span class="cmd-chip">!cvs on</span></div>
+        <p>Pause purchases, or start them again.</p>
+      </div>
+      <div class="meta-card mod">
+        <span class="badge-mod">Mods</span>
+        <div class="cmds"><span class="cmd-chip">!cvs clear</span><span class="cmd-chip">!cvs status</span></div>
+        <p>Empty the queue and refund everyone in it, or check whether it's on, what the game is doing and how much is queued.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider" aria-hidden="true"><span class="line"></span><svg width="40" height="16"><use href="#i-lights"/></svg><span class="line"></span></div>
+
+  <section id="points">
+    <div class="block-head">
+      <h2>How chaos points work</h2>
+      <p>Points come from being part of the stream. These are the mod's defaults, and the streamer can change any of them.</p>
+    </div>
+    <div class="panel points-panel">
+      <div class="table-scroll">
+        <table class="econ">
+          <thead><tr><th>Doing this</th><th>Earns</th><th>Notes</th></tr></thead>
+          <tbody id="earn-rows"></tbody>
+        </table>
+      </div>
+      <div class="mult-row" id="mult-row"></div>
+    </div>
+    <div class="callouts" id="callouts"></div>
+  </section>
+
+  <div class="divider" aria-hidden="true"><span class="line"></span><svg width="40" height="16"><use href="#i-lights"/></svg><span class="line"></span></div>
+
+  <section id="effects">
+    <div class="block-head">
+      <h2>The effects</h2>
+      <p>Default prices. <span class="cmd-chip">!shop &lt;tier&gt;</span> in chat always has the live ones. Click any command to copy it.</p>
+    </div>
+
+    <div class="toolbar-wrap">
+      <div class="panel toolbar">
+        <label class="search">
+          <svg aria-hidden="true"><use href="#i-search"/></svg>
+          <input type="search" id="search" placeholder="Search, e.g. car, alien or wanted" autocomplete="off" spellcheck="false" aria-label="Search the effects">
+        </label>
+        <div class="filters" role="group" aria-label="Show">
+          <button class="filter-btn" data-kind="all" aria-pressed="true">All</button>
+          <button class="filter-btn" data-kind="chaos" aria-pressed="false">Chaos</button>
+          <button class="filter-btn" data-kind="blessing" aria-pressed="false">Blessings</button>
+        </div>
+        <span class="stat-line" id="stat-line" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <nav class="catnav" id="catnav" aria-label="Jump to a tier"></nav>
+
+    <div class="legend" id="legend">
+      <span><span class="stars" id="legend-stars"></span> More stars, more chaos</span>
+      <span><span class="cmd-chip short">!kill</span> Its own command, same price</span>
+      <span><span class="need">In a vehicle</span> Waits until it can run</span>
+    </div>
+
+    <div id="ledger"></div>
+    <p class="panel empty-state" id="empty-state">Nothing matches that. Try <span class="cmd-chip">!shop</span> in chat for the live list.</p>
+  </section>
+
+  <footer class="panel">
+    <span class="mono">Chat vs Streamer for GTA V &middot; The Chaos Dispatch</span>
+    <span class="mono" id="footer-count"></span>
+    <span>The list is built from the mod's own source, so it matches the latest release. <a href="https://github.com/musicman0917/ChatVsStreamer-GTAV">Source, install and setup on GitHub</a>.</span>
+    <span id="ai-disclosure">AI disclosure: NeighborhoodofMusic wrote the baseline code for this mod. Claude (Anthropic) was used to help sort, organize, and correct the code.</span>
+    <span>Grand Theft Auto V is a trademark of Take-Two Interactive. This is an unofficial fan mod for story mode, not affiliated with Rockstar Games or Take-Two.</span>
+  </footer>
+
+</div>
+
+<script src="catalog.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const TIERS = [
+    { key: 'Nuisance', label: 'Nuisance', stars: 1, kind: 'chaos', blurb: "Annoying, survivable, and very funny from chat's side." },
+    { key: 'Disruptive', label: 'Disruptive', stars: 2, kind: 'chaos', blurb: 'Enough to ruin a getaway.' },
+    { key: 'Painful', label: 'Painful', stars: 3, kind: 'chaos', blurb: 'Bring armor. Bring a faster car. Bring friends.' },
+    { key: 'Devastating', label: 'Devastating', stars: 4, kind: 'chaos', blurb: "The ones the streamer will still be talking about tomorrow." },
+    { key: 'Blessing', label: 'Blessings', stars: 0, kind: 'blessing', blurb: 'For when chat is feeling generous. Or guilty.' },
+  ];
+  const MAX_STARS = 4;
+
+  const NEEDS = {
+    vehicle: { label: 'In a vehicle', title: 'Waits until the streamer is in a vehicle.' },
+    foot: { label: 'On foot', title: 'Waits until the streamer is out of any vehicle.' },
+    mission: { label: 'Not on a mission', title: 'Waits for a mission to end, because it could break one. The streamer can turn this off.' },
+    human: { label: 'Not as an animal', title: "Waits while the streamer is an animal, which can't hold a weapon or a parachute." },
+    silent: { label: 'Unannounced', title: 'No alert in the game or on the overlay, so it lands as a surprise.' },
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const num = (n) => Number(n).toLocaleString('en-US');
+  const plural = (n, one, many) => `${num(n)} ${n === 1 ? one : many}`;
+  const star = (on) => `<svg class="star${on ? '' : ' off'}" aria-hidden="true"><use href="#i-star"/></svg>`;
+  const starRow = (n) => n ? `<span class="stars" role="img" aria-label="${n} of ${MAX_STARS} stars">${Array.from({ length: MAX_STARS }, (_, i) => star(i < n)).join('')}</span>` : '';
+  const chip = (text, extra) => `<button type="button" class="cmd-chip${extra ? ' ' + extra : ''}" data-copy="${esc(text)}" title="Copy ${esc(text)}">${esc(text)}</button>`;
+
+  const catalog = window.CVS_CATALOG;
+  if (!catalog || !Array.isArray(catalog.effects)) {
+    $('ledger').innerHTML = '<p class="panel empty-state is-visible">The command list didn\'t load. The README on GitHub has every effect too.</p>';
+    return;
+  }
+  const S = catalog.settings;
+  const effects = catalog.effects;
+  const byId = Object.fromEntries(effects.map((e) => [e.id, e]));
+
+  // ---------- the chat example, built from the real effects ----------
+
+  (function chatDemo() {
+    const pick = byId.abduct || effects.find((e) => e.direct) || effects[0];
+    const tier = pick.tier;
+    const sameTier = effects.filter((e) => e.tier === tier).slice(0, 4).map((e) => `${e.id} ${e.price}`).join(' | ');
+    const viewer = 'sunset_cruiser';
+    const line = (who, cls, html) => `<p class="msg"><span class="who ${cls}">${who}</span>: ${html}</p>`;
+    $('chat-demo').innerHTML = [
+      line(viewer, 'viewer', `<code>!shop ${esc(tier.toLowerCase())}</code>`),
+      line('chaos_bot', 'bot', `${esc(tier)}: ${esc(sameTier)} | &hellip;`),
+      line(viewer, 'viewer', `<code>!info ${esc(pick.id)}</code>`),
+      line('chaos_bot', 'bot', `${esc(pick.name)} (${esc(tier)}, ${num(pick.price)} pts): ${esc(pick.description)}`),
+      line(viewer, 'viewer', `<code>${pick.direct ? '!' + esc(pick.id) : '!buy ' + esc(pick.id)}</code>`),
+      `<p class="msg feed">In the game: <b>${viewer}</b>: ${esc(pick.name)}</p>`,
+    ].join('');
+  })();
+
+  // ---------- a skyline along the bottom of the header ----------
+
+  (function skyline() {
+    const svg = $('skyline');
+    let seed = 20261115;
+    const rand = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+    const ns = 'http://www.w3.org/2000/svg';
+    const rect = (x, y, w, h, fill) => {
+      const r = document.createElementNS(ns, 'rect');
+      r.setAttribute('x', x.toFixed(1)); r.setAttribute('y', y.toFixed(1));
+      r.setAttribute('width', w.toFixed(1)); r.setAttribute('height', h.toFixed(1));
+      r.setAttribute('fill', fill);
+      svg.appendChild(r);
+    };
+    for (const layer of [{ fill: 'var(--skyline-2)', min: 34, max: 70, lit: 0 }, { fill: 'var(--skyline)', min: 20, max: 84, lit: 0.22 }]) {
+      let x = -10;
+      while (x < 1090) {
+        const w = 26 + rand() * 54;
+        const h = layer.min + rand() * (layer.max - layer.min);
+        const top = 96 - h;
+        rect(x, top, w, h, layer.fill);
+        if (rand() < 0.18) rect(x + w / 2 - 1, top - 10 - rand() * 12, 2, 22, layer.fill); // an antenna
+        if (layer.lit) {
+          for (let wy = top + 7; wy < 92; wy += 9) {
+            for (let wx = x + 5; wx < x + w - 6; wx += 8) {
+              if (rand() < layer.lit) rect(wx, wy, 3, 4, 'var(--window)');
+            }
+          }
+        }
+        x += w + 2 + rand() * 6;
+      }
+    }
+  })();
+
+  // ---------- points ----------
+
+  (function points() {
+    const window_ = S.PassiveMinutes * (catalog.passiveWindowIntervals || 3);
+    const rows = [
+      ['Showing up', `${num(S.StartingPoints)} pts`, 'What everyone starts with, the first time the mod sees them.'],
+      ['Sending a message', `+${num(S.ChatBonus)} pts`, `At most once every ${plural(S.ChatCooldown, 'second', 'seconds')}.`],
+      ['Being around', `+${num(S.PassivePoints)} pts`, `Every ${plural(S.PassiveMinutes, 'minute', 'minutes')}, for anyone who chatted in the last ${plural(window_, 'minute', 'minutes')}. Subs earn more, below.`],
+      ['Subscribing or resubscribing', `+${num(S.SubBonus)} pts`, 'Each time.'],
+      ['Gifting a sub', `+${num(S.GiftBonus)} pts`, 'Per sub gifted, paid to the gifter.'],
+      ['Cheering', `+${num(S.PointsPerBit)} pt${S.PointsPerBit === 1 ? '' : 's'}`, 'Per bit.'],
+      ['Leading a raid', `+${num(S.RaidPerViewer)} pts`, 'Per raider, paid to whoever led it.'],
+    ];
+    (catalog.rewards || []).forEach((r) => rows.push([`Redeeming <i>${esc(r.title)}</i>`, `+${num(r.points)} pts`, 'A channel point reward, if the streamer has set it up.']));
+    $('earn-rows').innerHTML = rows.map(([what, pts, note]) => `<tr><td>${what}</td><td class="pts">${pts}</td><td class="note">${note}</td></tr>`).join('');
+
+    const m = catalog.subMultipliers || {};
+    const x = (v) => `&times;${Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    $('mult-row').innerHTML = `<span class="label">The ${num(S.PassiveMinutes)}-minute payout, by sub:</span>`
+      + `<span class="mchip">No sub <b>${x(1)}</b></span>`
+      + `<span class="mchip">Tier 1 or Prime <b>${x(m['1'])}</b></span>`
+      + `<span class="mchip">Tier 2 <b>${x(m['2'])}</b></span>`
+      + `<span class="mchip">Tier 3 <b>${x(m['3'])}</b></span>`;
+
+    const mob = catalog.raidMob || {};
+    const minutes = Math.round(catalog.queueTimeoutSeconds / 60);
+    const callouts = [
+      ['Effects wait for the right moment', `Loading screens, cutscenes, the pause menu, being wasted or busted: a purchase waits in line through all of them. So does a car effect while the streamer is on foot. If it still can't run after ${plural(minutes, 'minute', 'minutes')}, the points come back on their own, and the bot says why.`],
+      ['Cooldowns are shared', `Once an effect goes off, nobody can set off that one again for ${plural(S.EffectCooldown, 'second', 'seconds')}, so a second purchase waits its turn. Any two effects land at least ${plural(S.MinSpacing, 'second', 'seconds')} apart.`],
+    ];
+    if (S.RaidAttack) callouts.push(['Raids hit back', `A raid of ${num(S.RaidAttackMinViewers)} or more also sends a hostile mob after the streamer: one attacker for every ${num(mob.raidersPerAttacker)} raiders, between ${num(mob.min)} and ${num(mob.max)}.`]);
+    if (S.BlockRiskyInMissions) callouts.push(['Missions come first', "Effects that could break a mission, such as teleports, vehicle swaps and clock changes, wait until it's over. They're marked below. The streamer can switch that off."]);
+    $('callouts').innerHTML = callouts.map(([title, body]) => `<div class="panel callout"><strong>${title}</strong>${body}</div>`).join('');
+  })();
+
+  // ---------- the effects ----------
+
+  const tiers = TIERS.filter((t) => effects.some((e) => e.tier === t.key));
+  effects.forEach((e) => { if (!tiers.some((t) => t.key === e.tier)) tiers.push({ key: e.tier, label: e.tier, stars: 0, kind: 'chaos', blurb: '' }); });
+
+  $('legend-stars').innerHTML = starRow(2).replace(/role="img" aria-label="[^"]*"/, 'aria-hidden="true"');
+  $('catnav').innerHTML = tiers.map((t) => `<a href="#tier-${esc(t.key.toLowerCase())}">${esc(t.label)} ${starRow(t.stars)}</a>`).join('');
+
+  const shortcuts = effects.filter((e) => e.direct);
+  const example = byId.kill || shortcuts[0];
+  if (example) $('shortcut-note').innerHTML = `Some effects have a command of their own, at the same price: <span class="cmd-chip">!${esc(example.id)}</span> is <span class="cmd-chip">!buy ${esc(example.id)}</span>. They're marked below.`;
+
+  $('ledger').innerHTML = tiers.map((t) => {
+    const list = effects.filter((e) => e.tier === t.key);
+    const rows = list.map((e) => {
+      const kind = t.kind;
+      const words = [e.id, e.alias || '', e.name, e.description, t.label, ...e.needs.map((n) => (NEEDS[n] || { label: n }).label)].join(' ').toLowerCase();
+      const commands = [chip(`!buy ${e.id}`)];
+      if (e.direct) commands.push(chip(`!${e.id}`, 'short'));
+      if (e.alias) commands.push(chip(`!${e.alias}`, 'short'));
+      const needs = e.needs.map((n) => { const d = NEEDS[n] || { label: n, title: '' }; return `<span class="need" title="${esc(d.title)}">${esc(d.label)}</span>`; }).join('');
+      return `<tr id="fx-${esc(e.id)}" data-kind="${kind}" data-search="${esc(words)}">
+          <td class="cmd-col"><div class="cmd-stack">${commands.join('')}</div></td>
+          <td><div class="fx-name">${esc(e.name)}</div><div class="fx-desc">${esc(e.description)}</div>${needs ? `<div class="needs">${needs}</div>` : ''}</td>
+          <td class="cost">${num(e.price)} pts</td>
+        </tr>`;
+    }).join('');
+    return `<section class="tier" id="tier-${esc(t.key.toLowerCase())}" data-kind="${t.kind}">
+        <div class="tier-head">
+          <h3>${esc(t.label)}</h3>
+          ${t.stars ? starRow(t.stars) : '<span class="blessing-badge">Helps the streamer</span>'}
+          <span class="count" data-total="${list.length}">${list.length}</span>
+        </div>
+        ${t.blurb ? `<p class="tier-blurb">${esc(t.blurb)}</p>` : ''}
+        <div class="panel table-scroll">
+          <table class="fx">
+            <thead><tr><th class="cmd-head">Command</th><th>Effect</th><th class="cost-head">Cost</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </section>`;
+  }).join('');
+
+  const blessings = effects.filter((e) => e.tier === 'Blessing').length;
+  $('footer-count').textContent = `${effects.length} effects, ${shortcuts.length} with a command of their own`;
+
+  // ---------- search and filters ----------
+
+  const search = $('search');
+  const buttons = Array.from(document.querySelectorAll('.filter-btn'));
+  let kind = 'all';
+
+  function apply() {
+    const q = search.value.trim().toLowerCase();
+    let shown = 0;
+    document.querySelectorAll('#ledger .tier').forEach((section) => {
+      let visibleHere = 0;
+      section.querySelectorAll('tbody tr').forEach((row) => {
+        const visible = (kind === 'all' || row.dataset.kind === kind) && (!q || row.dataset.search.includes(q));
+        row.classList.toggle('is-hidden', !visible);
+        if (visible) visibleHere++;
+      });
+      shown += visibleHere;
+      section.classList.toggle('is-hidden', visibleHere === 0);
+      const count = section.querySelector('.count');
+      const total = Number(count.dataset.total);
+      count.textContent = visibleHere === total ? String(total) : `${visibleHere} of ${total}`;
+    });
+    $('empty-state').classList.toggle('is-visible', shown === 0);
+    $('stat-line').innerHTML = shown === effects.length
+      ? `<b>${effects.length}</b> effects &middot; <b>${effects.length - blessings}</b> chaos &middot; <b>${blessings}</b> blessings`
+      : `<b>${shown}</b> of ${effects.length} effects`;
+  }
+
+  search.addEventListener('input', apply);
+  buttons.forEach((b) => b.addEventListener('click', () => {
+    kind = b.dataset.kind;
+    buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    apply();
+  }));
+  apply();
+
+  // ---------- click a command to copy it ----------
+
+  // The older way, for browsers that refuse the clipboard API, such as some embedded ones.
+  function copyByCommand(text) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    area.remove();
+    return ok;
+  }
+
+  document.addEventListener('click', (ev) => {
+    const target = ev.target.closest('button.cmd-chip[data-copy]');
+    if (!target) return;
+    const text = target.dataset.copy;
+    const done = () => {
+      target.classList.add('copied');
+      setTimeout(() => target.classList.remove('copied'), 1200);
+    };
+    const fallback = () => { if (copyByCommand(text)) done(); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  });
+
+  // A link to one effect, such as #fx-kill, should still land on it after the list is built.
+  if (location.hash) {
+    const el = document.getElementById(location.hash.slice(1));
+    if (el) el.scrollIntoView();
+  }
+})();
+</script>
+</body>
+</html>

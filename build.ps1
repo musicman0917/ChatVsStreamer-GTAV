@@ -17,6 +17,10 @@ $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $build = Join-Path $root "build"
 
+# The commands page in docs\ takes its effects and numbers from the source, so it's brought up
+# to date on every build.
+& (Join-Path $root "tools\gen_commands_page.ps1")
+
 # Terminals opened before CMake was installed won't have it on PATH yet.
 if (-not (Get-Command cmake -ErrorAction SilentlyContinue)) {
     $cmakeDir = @("$env:ProgramFiles\CMake\bin",
